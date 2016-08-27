@@ -7,6 +7,7 @@
 #define BUFFER_SIZE 100
 
 int pwd_func(char **);
+int exit_func(char **);
 void initialize(void);
 
 struct command{
@@ -37,12 +38,10 @@ int main(){
 
 		//get input
 		fgets(input,BUFFER_SIZE-1,stdin);
-		input = strtok(input,"\n");
-
-		/*if((*input) == (*leave)){
-			break;
+		if(strcmp(input,"\n") == 0){
+			continue;
 		}
-		*/
+		input = strtok(input,"\n");
 
 		for(i = 0;i<built_in_size;i++){
 			if(strcmp(input,built_in_list[i]->name) == 0){
