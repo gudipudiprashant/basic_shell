@@ -5,9 +5,24 @@
 
 
 #define BUFFER_SIZE 100
+#define HIS_SIZE 10
+
+// queue variables head and tail
+typedef struct
+{
+	int tail;
+	int head;
+} queue_p;
+
+
 
 int pwd_func(char **);
 int exit_func(char **);
+int history_func(char **);
+void maintain_his(const char*);
+void print_his(void);
+
+
 void initialize(void);
 
 struct command{
@@ -20,13 +35,17 @@ struct command{
 struct command **built_in_list;
 int built_in_size;
 char *pwd;
-struct command *pwd_com,*exit_com;
+struct command *pwd_com,*exit_com,*history_com;
+queue_p *cur_p;
+char ** ar_his; // circular queue to maintain history
 
 int main(){
 
 	char *input;
 	int i,is_built_in=0;
 	input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
+	ar_his = (char **)malloc(sizeof(char *)*(HIS_SIZE+1));
+	cur_p = (queue_p *)malloc(sizeof(queue_p));
 	initialize();
 
 	while(1){
@@ -43,6 +62,8 @@ int main(){
 		}
 		input = strtok(input,"\n");
 
+		maintain_his(input);
+
 		for(i = 0;i<built_in_size;i++){
 			if(strcmp(input,built_in_list[i]->name) == 0){
 				(*(built_in_list[i]->func))(NULL); // NULL for now. Will have to add args pointer in place of void after tokening input
@@ -50,7 +71,9 @@ int main(){
 			}
 		}
 
+
 		if(!is_built_in){
+			printf("Command: ");
 			printf("%s\n",input);	
 		}
 		
@@ -67,6 +90,72 @@ int pwd_func(char **args){
 
 int exit_func(char **args){
 	exit(0);
+}
+
+int history_func(char **args){
+	print_his();
+	return 0;
+}
+
+// returns the changed values of head and tail
+void maintain_his(const char* cmd ){
+	static int head=0, tail=0, flag=0;
+	char *temp;
+	int t;
+
+	temp = (char *)malloc(sizeof(char)*BUFFER_SIZE);
+	temp = strcpy(temp,cmd);
+
+
+	if (( tail-head )==( HIS_SIZE)){
+		flag = 1;
+	}
+	
+	//int check=(tail-head+HIS_SIZE)%HIS_SIZE;
+	// instead can store a static variable flag which once set implies queue is full
+
+	ar_his[tail]=(char *)temp;
+
+	if(flag){
+		// freeing the oldest command
+		free(ar_his[head]);
+		head=(head+1)%(HIS_SIZE+1);
+		tail=(tail+1)%(HIS_SIZE+1);
+		// circular increment
+	}
+
+	else
+		tail++;
+
+	cur_p->tail=tail;
+	cur_p->head=head;
+}
+
+// returns the nth command from starting
+char * his_n(queue_p* ptr, int n){
+	int tail = ptr->tail, head = ptr->head;
+	int x=(tail-head+HIS_SIZE)%HIS_SIZE;
+	n--;
+
+	if(n<=x)
+		return ar_his[head+n];
+
+	else
+		return NULL;
+	//  if given n doesn't lie in the range, returns NULL
+}
+
+// prints the entire history from 1 to HIS_SIZE(oldest to newest)
+void print_his(void){
+	int i=1,j=cur_p->head;
+	while(j!=cur_p->tail){
+		printf("%d %s\n",i,ar_his[j]);
+		
+		j=(j+1)%(HIS_SIZE+1);
+		i++;
+
+	}
+
 }
 
 void initialize(void){
@@ -90,6 +179,11 @@ void initialize(void){
 	built_in_list[i] = exit_com;
 	i++;
 
+	history_com = (struct command *)malloc(1*sizeof(struct command));
+	history_com->name = "history";
+	history_com->func = &history_func;
+	built_in_list[i] = history_com;
+	i++;
 
 
 	//this must be at the end
