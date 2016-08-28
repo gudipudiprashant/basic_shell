@@ -9,7 +9,7 @@
 ## Contribution: ##
 Pranjal Agrawal: Piping and redirection.  
 Prashant Gudipudi: Built-in function implementation.  
-Sangana Abhiram: History implementation. 
+Sangana Abhiram: History implementation.   
 Yash Pote: Input parsing.
 
 ## Overview: ##
