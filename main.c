@@ -48,11 +48,9 @@ char ** ar_his, **args; // circular queue to maintain history
 
 int main(){
 
-	int i,is_built_in=0,token_pos = 0;
+	int i,is_built_in=0,token_pos = 0,no_args = 0;
 	char *token;
-	input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
 	ar_his = (char **)malloc(sizeof(char *)*(HIS_SIZE+1));
-	args = (char **)malloc(sizeof(char *)*(MAX_TOKENS));
 	cur_p = (queue_p *)malloc(sizeof(queue_p));
 
 	pid_t pid;
@@ -64,8 +62,11 @@ int main(){
 
 	while(1){
 
+		input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
+		args = (char **)malloc(sizeof(char *)*(MAX_TOKENS));
 		is_built_in = 0;
 		token_pos = 0;
+		no_args = 0;
 		token = NULL;
 		// how to clear args?
 
@@ -84,10 +85,11 @@ int main(){
 		maintain_his(input);
 
 		token = strtok(input,TOKEN_DELIM); //input will get modified
-
+		no_args++;
 		while(token!=NULL){
 			args[token_pos] = token;
 			token_pos++;
+			no_args++;
 			token = strtok(NULL,TOKEN_DELIM); //strtok maintains a static pointer
 		}
 		args[token_pos] = NULL;
@@ -107,6 +109,7 @@ int main(){
 			if(pid == 0){
 				//in the child process
 				execvp(args[0],args);
+				exit(0);
 			}
 			else if(pid > 0){
 				wait(&status);
@@ -125,6 +128,10 @@ int main(){
 
 		}
 		
+		free(input);
+		free(args); 
+		//only freeing the array coz the other pointers 
+		//point to locations in input block and that is already freed.
 	}
 
 	return 0;
