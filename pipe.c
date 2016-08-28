@@ -15,6 +15,8 @@ extern int errno;
 
 int execute(char *cmd, int fd[], int pipe_st) {
 
+
+
     char **argv = malloc(MAX_ARGS * sizeof(char *));
     int i, idx = 0;
     for (i = 0; i< MAX_ARGS; ++i) {
@@ -28,7 +30,15 @@ int execute(char *cmd, int fd[], int pipe_st) {
         token = strtok(NULL, " \0");
     }
     argv[idx] = NULL;
-    // printf("For cmd %s\n", cmd);
+
+    // Check and execute built-in commands
+    int b_i_index = built_in_index(*argv);
+    if(b_i_index > (-1)){
+        (*(built_in_list[b_i_index]->func))(argv);
+        return 1;
+    }
+
+    // Else execute external command.
     pid_t child = fork();
     if (child == 0)  {
         
@@ -121,10 +131,7 @@ void pipe_cmd(char **argv) {
 
 }
 
-int main() {
-    char inp[50];
-    fgets(inp, 49, stdin);
-    inp[strcspn(inp,  "\n")] = 0;
+int parse_inp(char *inp) {
     
     int idx = 0;
     char **argv_l = malloc(10 * sizeof(char *));

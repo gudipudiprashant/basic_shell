@@ -6,6 +6,7 @@
 #include<sys/wait.h>
 #include"main.h"
 #include"inbuilt.c"
+#include"pipe.c"
 
 #define PRINT_CMD 0
 
@@ -15,8 +16,8 @@ int main(){
 	pid_t pid;
 	int status;
 
-	int i,is_inp_empty,b_i_index,no_args;
-
+	int i,is_inp_empty;
+	
 	initialize();
 
 	//need to be done only once in the program.
@@ -27,7 +28,6 @@ int main(){
 
 	while(1){
 
-		no_args = 0;
 
 		//print the prompt
 		printf("basic_shell:%s$ ",pwd);
@@ -38,36 +38,16 @@ int main(){
 		if(is_inp_empty){
 			continue;
 		}
-		
+
 		access_history(input);
 
 
 		//add input into history
 		maintain_his(input);
 
-		//parse input. input string is modified.
-		no_args = parse_input();
+		//parse input: Serarate it into commands and execute
+		parse_inp(input);
 
-		//b_i_index is -1 if not built-in.
-		b_i_index = built_in_index(args[0]);
-
-		//built_in_list contains all structs of built-in-commands.
-		if(b_i_index > (-1)){
-			(*(built_in_list[b_i_index]->func))(args);
-		}
-		else {
-
-			pid = fork();
-			if(pid == 0){
-				//in the child process
-				execvp(args[0],args);
-				exit(0);
-			}
-			else if(pid > 0){
-				wait(&status);
-			}
-
-		}
 		
 		if(PRINT_CMD){
 			print_command();
@@ -101,7 +81,10 @@ int get_input(void){
 		return 1;
 	}
 
-	input = strtok(input,"\n"); //removes the \n at the end of the string.
+	// Trim tariling newline
+    input[strcspn(input,  "\n")] = 0;
+
+	 //input = strtok(input,"\n"); //removes the \n at the end of the string.
 
 	return 0;
 	
