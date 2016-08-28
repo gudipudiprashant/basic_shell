@@ -14,7 +14,7 @@ typedef struct
 
 struct command{
     char *name;
-    int (*func)(char **);
+    int (*func)(char **, int [], int);
         
 };
 
@@ -22,14 +22,14 @@ struct command{
 void initialize(void);
 
 //built in functions
-int pwd_func(char **);
-int exit_func(char **);
-int history_func(char **);
-int cd_func(char **);
+int pwd_func(char **, int [], int);
+int exit_func(char **, int [], int);
+int history_func(char **, int [], int);
+int cd_func(char **, int [], int);
 
 //history related functions
 void maintain_his(const char*);
-void print_his(void);
+void print_his(int [], int);
 char *his_n(int);
 
 //execution functions

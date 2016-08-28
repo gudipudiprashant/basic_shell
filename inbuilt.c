@@ -1,23 +1,26 @@
-int pwd_func(char **args){
+int pwd_func(char **args, int fd[], int pipemask){
     pwd = getcwd(pwd,BUFFER_SIZE-1);
-    printf("%s\n",pwd);
+    if (pipemask & 2)
+        dprintf(fd[1], "%s\n",pwd);
+    else
+        printf("%s\n",pwd);
     return 0;
 }
 
-int exit_func(char **args){
+int exit_func(char **args, int fd[], int pipemask){
     exit(0);
 }
 
-int history_func(char **args){
-    print_his();
+int history_func(char **args, int fd[], int pipemask){
+    print_his(fd, pipemask);
     return 0;
 }
 
-int cd_func(char **args){
+int cd_func(char **args, int fd[], int pipemask){
     if(args[1] != NULL){
         chdir(args[1]);
         
-        pwd_func(NULL);
+        pwd_func(NULL,fd , pipemask);
         return 0;
     }
 }
@@ -71,10 +74,13 @@ char * his_n(int n){
 }
 
 // prints the entire history from 1 to HIS_SIZE(oldest to newest)
-void print_his(void){
+void print_his(int fd[], int pipemask){
     int i=1,j=cur_p->head;
     while(j!=cur_p->tail){
-        printf("%d %s\n",i,ar_his[j]);
+        if (pipemask & 2)
+            dprintf(fd[1], "%d %s\n",i,ar_his[j]);
+        else    
+            printf("%d %s\n",i,ar_his[j]);
         
         j=(j+1)%(HIS_SIZE+1);
         i++;

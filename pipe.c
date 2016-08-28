@@ -4,7 +4,8 @@
 #include<unistd.h>
 #include<errno.h>
 #include<sys/wait.h>
-
+#include <sys/stat.h>
+#include <fcntl.h>
 extern int errno;
 
 #define MAX_ARGS 10
@@ -34,7 +35,7 @@ int execute(char *cmd, int fd[], int pipe_st) {
     // Check and execute built-in commands
     int b_i_index = built_in_index(*argv);
     if(b_i_index > (-1)){
-        (*(built_in_list[b_i_index]->func))(argv);
+        (*(built_in_list[b_i_index]->func))(argv, fd, pipe_st);
         return 1;
     }
 
@@ -131,80 +132,69 @@ void pipe_cmd(char **argv) {
 
 }
 
+int redir_cmd(char *cmd, char *fname, int pipemask) {
+    int fd[2];
+    if (pipemask == 1) {
+        fd[0] = open(fname, O_RDONLY);
+        if (fd[0] == -1)
+            printf("File or dir does not exist");
+            return -1;
+    }
+    else if (pipemask == 2) {
+        fd[1] = open(fname, O_RDONLY | O_CREAT);
+        if (fd[1] == -1)
+            printf("Error opening file");
+            return -1;
+    }
+
+    int status = execute(cmd, fd, pipemask);
+    if (status > 0)
+        return 0;
+    else
+        return 1;
+}
+
 int parse_inp(char *inp) {
     
     int idx = 0;
     char **argv_l = malloc(10 * sizeof(char *));
-    char *token = strtok(inp, "|\0");
-    while(token) {
-        argv_l[idx++] = token;
-        token = strtok(NULL, "|\0");
+    // Redirection vs. pipe
+    if (strchr(inp, '<')) {
+        char *cmd = strtok(inp, "<\0");
+        char *rd_fname = strtok(NULL, "<\0");
+        if (cmd && rd_fname && !strtok(NULL, ">\0"))
+            redir_cmd(cmd, rd_fname, 1);
+        else {
+            printf("Invalid command format\n");
+            return -1;
+        }
+
     }
-    argv_l[idx] = NULL;
 
-    pipe_cmd(argv_l);
+    else if (strchr(inp, '>')) {
+        char *cmd = strtok(inp, ">\0");
+        char *wr_fname = strtok(NULL, ">\0");
+        if (cmd && wr_fname && !strtok(NULL, ">\0"))
+            redir_cmd(cmd, wr_fname, 2);
+        else {
+            printf("Invalid command format\n");
+            return -1;
+        }
 
-    return 0;
+    } 
+
+    else {
+        char *token = strtok(inp, "|\0");
+        while(token) {
+            argv_l[idx++] = token;
+            token = strtok(NULL, "|\0");
+        }
+        argv_l[idx] = NULL;
+
+
+        pipe_cmd(argv_l);
+
+        return 0;
+    }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-// int main() {
-//     char inp[50];
-//     fgets(inp, 49, stdin);
-//     char (*(*argv_l))[10] = malloc(10 * sizeof(char *[10]));
-//     *argv_l = malloc(100 * sizeof(char));
-//     int idx = 0;
-//     char *token;
-//     token = strtok(inp, " \0");
-
-//     while (token) {
-//         argv_l[idx] = (*argv_l) + idx;
-//         strcpy(*argv_l[idx++], token);
-
-//         token = strtok(NULL, " \0");
-//     }
-
-//     argv_l[idx] = NULL;
-
-//     for (idx = 0; argv_l[idx]; ++idx) {
-//         printf("%s\n", (*argv_l)[idx]);
-//     }
-//     return 0;
-// }
-
-
-
-
-
-// int main() {
-//     char inp[50];
-//     fgets(inp, 49, stdin);
-//     char (*(*argv_l))[10] = malloc(10 * sizeof(char *[10]));
-//     *argv_l = malloc(100 * sizeof(char));
-//     int idx = 0;
-//     char *token;
-//     token = strtok(inp, " \0");
-
-//     while (token) {
-//         strcpy((*argv_l)[idx++], token);
-
-//         token = strtok(NULL, " \0");
-//     }
-
-//     argv_l[idx] = NULL;
-
-//     for (idx = 0; argv_l[idx]; ++idx) {
-//         printf("%s\n", (*argv_l)[idx]);
-//     }
-//     return 0;
-// }
