@@ -2,7 +2,8 @@
 #include<stdlib.h>
 #include<string.h>
 #include<unistd.h>
-
+#include<sys/types.h>
+#include<sys/wait.h>
 
 #define BUFFER_SIZE 100
 #define HIS_SIZE 10
@@ -53,7 +54,13 @@ int main(){
 	ar_his = (char **)malloc(sizeof(char *)*(HIS_SIZE+1));
 	args = (char **)malloc(sizeof(char *)*(MAX_TOKENS));
 	cur_p = (queue_p *)malloc(sizeof(queue_p));
+
+	pid_t pid;
+	int status;
+
 	initialize();
+
+
 
 	while(1){
 
@@ -95,7 +102,19 @@ int main(){
 
 
 		if(!is_built_in){
-			printf("Command: ");
+
+			pid = fork();
+			if(pid == 0){
+				//in the child process
+				execvp(args[0],args);
+			}
+			else if(pid > 0){
+				wait(&status);
+			}
+
+
+			//print command
+			printf("\nCommand: ");
 			token_pos = 0;
 
 			while(args[token_pos]!=NULL){
