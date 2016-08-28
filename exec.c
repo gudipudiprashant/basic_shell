@@ -1,11 +1,12 @@
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
-#include<unistd.h>
-#include<errno.h>
-#include<sys/wait.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
 extern int errno;
 
 #define MAX_ARGS 10
@@ -58,12 +59,23 @@ int execute(char *cmd, int fd[], int pipe_st) {
         
         // Child Here
         if (execvp(*argv, argv) < 0) {     /* execute the command  */
-            printf("*** ERROR: exec of %s failed\n", *argv);
+            if (errno == EACCES || errno == EIO)
+                fprintf(stderr, "*** ERROR: exec of %s failed: No such command\n", *argv);
+            else if (errno == ENOEXEC)
+                fprintf(stderr, "*** ERROR: exec of %s failed: File not found or imporper format\n", *argv);
+            else
+                fprintf(stderr, "*** Command not found\n");
+
             exit(errno);
         }
 
     }
     else {
+
+        if (child < 0) {
+            fprintf(stderr, "Unable to fork from parent\n" );
+            exit(errno);
+        }
         //Parent stuff, wait for child to terminate and return
         // with error handling
         int cstatus;
@@ -167,10 +179,15 @@ int parse_inp(char *inp) {
     
     int idx = 0;
     char **argv_l = malloc(10 * sizeof(char *));
+
     // Redirection vs. pipe
     if (strchr(inp, '<')) {
         char *cmd = strtok(inp, "<\0");
+        if (!trimSpc(cmd))
+                printf("Wrong input format\n");
         char *rd_fname = strtok(NULL, "<\0");
+        if (!trimSpc(rd_fname))
+                printf("Wrong input format\n");
         if (cmd && rd_fname && !strtok(NULL, ">\0"))
             redir_cmd(cmd, rd_fname, 1);
         else {
@@ -182,7 +199,9 @@ int parse_inp(char *inp) {
 
     else if (strchr(inp, '>')) {
         char *cmd = strtok(inp, ">\0");
+        trimSpc(cmd);
         char *wr_fname = strtok(NULL, ">\0");
+        trimSpc(wr_fname);
         if (cmd && wr_fname && !strtok(NULL, ">\0"))
             redir_cmd(cmd, wr_fname, 2);
         else {
@@ -193,17 +212,25 @@ int parse_inp(char *inp) {
     } 
 
     else {
-        char *token = strtok(inp, "|\0");
+        char *token =strtok(inp, "|\0");
+        if (!trimSpc(token))
+            printf("Wrong input format\n");
+
         while(token) {
             argv_l[idx++] = token;
             token = strtok(NULL, "|\0");
+            if (!trimSpc(token))
+                printf("Wrong input format\n");
         }
         argv_l[idx] = NULL;
 
 
         pipe_cmd(argv_l);
-
-        return 0;
+        // argv_l[idx] are part of the input string, and should be
+        // freed by the calling function.
     }
+
+    free(argv_l);
+    return 0;
 
 }

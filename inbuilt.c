@@ -1,3 +1,6 @@
+
+
+// Functions for built-in commands
 int pwd_func(char **args, int fd[], int pipemask){
     pwd = getcwd(pwd,BUFFER_SIZE-1);
     if (pipemask & 2)
@@ -24,6 +27,8 @@ int cd_func(char **args, int fd[], int pipemask){
         return 0;
     }
 }
+
+
 
 // returns the changed values of head and tail
 void maintain_his(const char* cmd ){
@@ -87,4 +92,53 @@ void print_his(int fd[], int pipemask){
 
     }
 
+}
+
+
+// Check if history access is required
+void access_history(char *cmd_name){
+    int last_cmd_index;
+    char *temp_1,*temp_2; 
+    int val;
+    temp_1 = (char *)malloc(3*sizeof(char));
+    strcpy(temp_1,"!!");
+
+
+    if(strcmp(cmd_name,temp_1) == 0){
+        free(input);
+        input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
+        last_cmd_index = (cur_p->tail + HIS_SIZE)%(HIS_SIZE + 1);
+        strcpy(input,ar_his[last_cmd_index]);
+        return;
+    }
+    else if((cmd_name[0]) == '!'){
+        val = atoi(&cmd_name[1]);
+        free(input);
+        input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
+        temp_2 = his_n(val);
+        strcpy(input,temp_2);
+        return;
+    }
+    else{
+        return;
+    }
+}
+
+
+
+int built_in_index(char *cmd_name){
+    //Checks if input command is built-in.
+    //returns index if belongs to list.
+    //returns -1 if not in list.
+
+    int i;
+
+    for(i = 0;i<built_in_size;i++){
+        if(strcmp(cmd_name,built_in_list[i]->name) == 0){
+            //(*(built_in_list[i]->func))(args);
+            return i;
+        }
+    }
+
+    return -1;
 }

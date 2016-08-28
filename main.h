@@ -35,7 +35,6 @@ char *his_n(int);
 //execution functions
 int get_input(void);
 void access_history(char *);
-int parse_input(void);
 int built_in_index(char *);
 void print_command(void);
 
@@ -94,4 +93,39 @@ void initialize(void){
     //this must be at the end
     built_in_size = i;
 
+}
+
+// Trim leading and trailing whitespaces for
+// the string.
+int trimSpc(char *str) {
+    if (!str)
+        return -1;
+    char *end;
+    char *start = str;
+
+    // Trim leading space
+    while(isspace(*str)) 
+        str++;
+
+    if(*str == 0)  // All spaces?
+        return 0;
+
+    // Trim trailing space
+    end = str + strlen(str) - 1;
+    while(end > str && isspace(*end)) 
+        end--;
+
+    // Write new null terminator
+    *(end+1) = 0;
+
+    int sz = 0;
+    while(*str) {
+        *start = *str;
+        str++; start++;
+        sz++;
+    }
+
+    *start = 0;
+
+    return sz;
 }

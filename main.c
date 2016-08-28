@@ -6,7 +6,7 @@
 #include<sys/wait.h>
 #include"main.h"
 #include"inbuilt.c"
-#include"pipe.c"
+#include"exec.c"
 
 #define PRINT_CMD 0
 
@@ -90,74 +90,7 @@ int get_input(void){
 	
 }
 
-int parse_input(void){
-	//creates a array of pointers to tokens.
-	//No extra memory is used to store tokens. The input string is modified.
-	//All pointers point to the memory block of input.
-	//returns number of arguments.
 
-	int no_args = 0;
-	char *token = NULL;
-
-	args = (char **)malloc(sizeof(char *)*(MAX_TOKENS));
-
-	token = strtok(input,TOKEN_DELIM); 
-
-	while(token!=NULL){
-		args[no_args] = token;
-		no_args++;
-		token = strtok(NULL,TOKEN_DELIM); //strtok maintains a static pointer,hence NULL
-	}
-	args[no_args] = NULL;
-
-	return no_args;
-
-}
-
-void access_history(char *cmd_name){
-	int last_cmd_index;
-	char *temp_1,*temp_2; 
-	int val;
-	temp_1 = (char *)malloc(3*sizeof(char));
-	strcpy(temp_1,"!!");
-
-
-	if(strcmp(cmd_name,temp_1) == 0){
-		free(input);
-		input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
-		last_cmd_index = (cur_p->tail + HIS_SIZE)%(HIS_SIZE + 1);
-		strcpy(input,ar_his[last_cmd_index]);
-		return;
-	}
-	else if((cmd_name[0]) == '!'){
-		val = atoi(&cmd_name[1]);
-		free(input);
-		input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
-		temp_2 = his_n(val);
-		strcpy(input,temp_2);
-		return;
-	}
-	else{
-		return;
-	}
-}
-
-int built_in_index(char *cmd_name){
-	//Checks if input command is built-in.
-	//returns index if belongs to list.
-	//returns -1 if not in list.
-
-	int i;
-
-	for(i = 0;i<built_in_size;i++){
-		if(strcmp(cmd_name,built_in_list[i]->name) == 0){
-			//(*(built_in_list[i]->func))(args);
-			return i;
-		}
-	}
-
-	return -1;
-}
 
 void print_command(void){
 
