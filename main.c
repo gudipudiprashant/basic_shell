@@ -7,66 +7,63 @@
 #include"main.h"
 #include"inbuilt.c"
 
+#define PRINT_CMD 0
 
 
 int main(){
 
-	int i,is_built_in=0,token_pos = 0,no_args = 0;
-	char *token;
-	ar_his = (char **)malloc(sizeof(char *)*(HIS_SIZE+1));
-	cur_p = (queue_p *)malloc(sizeof(queue_p));
-
 	pid_t pid;
 	int status;
 
+	int i,is_inp_empty,b_i_index,no_args,acc_his=0;
+
 	initialize();
+
+	//need to be done only once in the program.
+	ar_his = (char **)malloc(sizeof(char *)*(HIS_SIZE+1));
+	cur_p = (queue_p *)malloc(sizeof(queue_p));
 
 
 
 	while(1){
 
-		input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
-		args = (char **)malloc(sizeof(char *)*(MAX_TOKENS));
-		is_built_in = 0;
-		token_pos = 0;
 		no_args = 0;
-		token = NULL;
-		// how to clear args?
 
-
-		//print the prompt
-		printf("basic_shell:%s$ ",pwd);
-
-
-		//get input
-		fgets(input,BUFFER_SIZE-1,stdin);
-		if(strcmp(input,"\n") == 0){
+		if(!acc_his){
+			
+			//print the prompt
+			printf("basic_shell:%s$ ",pwd);
+			
+			//get command entered into memory pointed by input
+			is_inp_empty = get_input();
+		}
+		else{
+			acc_his = 0;
+		}
+		if(is_inp_empty){
 			continue;
 		}
-		input = strtok(input,"\n");
+		//printf("TEST\n");
+		acc_his = access_history(input);
 
+		if(acc_his == 1){
+			continue;
+		}
+
+		//add input into history
 		maintain_his(input);
 
-		token = strtok(input,TOKEN_DELIM); //input will get modified
-		no_args++;
-		while(token!=NULL){
-			args[token_pos] = token;
-			token_pos++;
-			no_args++;
-			token = strtok(NULL,TOKEN_DELIM); //strtok maintains a static pointer
+		//parse input. input string is modified.
+		no_args = parse_input();
+
+		//b_i_index is -1 if not built-in.
+		b_i_index = built_in_index(args[0]);
+
+		//built_in_list contains all structs of built-in-commands.
+		if(b_i_index > (-1)){
+			(*(built_in_list[b_i_index]->func))(args);
 		}
-		args[token_pos] = NULL;
-
-
-		for(i = 0;i<built_in_size;i++){
-			if(strcmp(input,built_in_list[i]->name) == 0){
-				(*(built_in_list[i]->func))(args); // NULL for now. Will have to add args pointer in place of void after tokening input
-				is_built_in = 1;
-			}
-		}
-
-
-		if(!is_built_in){
+		else {
 
 			pid = fork();
 			if(pid == 0){
@@ -78,19 +75,13 @@ int main(){
 				wait(&status);
 			}
 
-
-			//print command
-			// printf("\nCommand: ");
-			// token_pos = 0;
-
-			// while(args[token_pos]!=NULL){
-			// 	printf("%s ",args[token_pos]);
-			// 	token_pos++;
-			// }
-			// printf("\n");
-
 		}
 		
+		if(PRINT_CMD){
+			print_command();
+		}
+
+
 		free(input);
 		free(args); 
 		//only freeing the array coz the other pointers 
@@ -101,3 +92,105 @@ int main(){
 }
 
 
+int get_input(void){
+
+	//takes input from the user.
+	//returns 1 if the string is empty.
+	//returns 0 if the string is not-empty.
+	
+	input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
+	
+	fgets(input,BUFFER_SIZE-1,stdin);
+
+	//fgets has \n in the end of the input string.
+
+	//check for empty string
+	if(strcmp(input,"\n") == 0){
+		return 1;
+	}
+
+	input = strtok(input,"\n"); //removes the \n at the end of the string.
+
+	return 0;
+	
+}
+
+int parse_input(void){
+	//creates a array of pointers to tokens.
+	//No extra memory is used to store tokens. The input string is modified.
+	//All pointers point to the memory block of input.
+	//returns number of arguments.
+
+	int no_args = 0;
+	char *token = NULL;
+
+	args = (char **)malloc(sizeof(char *)*(MAX_TOKENS));
+
+	token = strtok(input,TOKEN_DELIM); 
+
+	while(token!=NULL){
+		args[no_args] = token;
+		no_args++;
+		token = strtok(NULL,TOKEN_DELIM); //strtok maintains a static pointer,hence NULL
+	}
+	args[no_args] = NULL;
+
+	return no_args;
+
+}
+
+int access_history(char *cmd_name){
+	int last_cmd_index;
+	char *temp_1,*temp_2; 
+	int val;
+	temp_1 = (char *)malloc(3*sizeof(char));
+	strcpy(temp_1,"!!");
+	if(strcmp(cmd_name,temp_1) == 0){
+		free(input);
+		input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
+		last_cmd_index = (cur_p->tail + HIS_SIZE)%(HIS_SIZE + 1);
+		strcpy(input,ar_his[last_cmd_index]);
+		return 1;
+	}
+	else if((cmd_name[0]) == '!'){
+		val = atoi(&cmd_name[1]);
+		free(input);
+		input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
+		temp_2 = his_n(val);
+		strcpy(input,temp_2);
+		return 1;
+	}
+	else{
+		return 0;
+	}
+}
+
+int built_in_index(char *cmd_name){
+	//Checks if input command is built-in.
+	//returns index if belongs to list.
+	//returns -1 if not in list.
+
+	int i;
+
+	for(i = 0;i<built_in_size;i++){
+		if(strcmp(cmd_name,built_in_list[i]->name) == 0){
+			//(*(built_in_list[i]->func))(args);
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+void print_command(void){
+
+	int token_pos = 0;
+
+	printf("\nCommand: ");
+
+	while(args[token_pos]!=NULL){
+		printf("%s ",args[token_pos]);
+		token_pos++;
+	}
+	printf("\n");
+}

@@ -1,6 +1,3 @@
-
-
-
 int pwd_func(char **args){
     pwd = getcwd(pwd,BUFFER_SIZE-1);
     printf("%s\n",pwd);
@@ -60,9 +57,9 @@ void maintain_his(const char* cmd ){
 }
 
 // returns the nth command from starting
-char * his_n(queue_p* ptr, int n){
-    int tail = ptr->tail, head = ptr->head;
-    int x=(tail-head+HIS_SIZE)%HIS_SIZE;
+char * his_n(int n){
+    int tail = cur_p->tail, head = cur_p->head;
+    int x=(tail-head+HIS_SIZE+1)%(HIS_SIZE+1);
     n--;
 
     if(n<=x)
