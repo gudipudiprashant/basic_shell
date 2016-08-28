@@ -34,7 +34,7 @@ char *his_n(int);
 
 //execution functions
 int get_input(void);
-int access_history(char *);
+void access_history(char *);
 int parse_input(void);
 int built_in_index(char *);
 void print_command(void);

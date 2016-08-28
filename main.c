@@ -15,7 +15,7 @@ int main(){
 	pid_t pid;
 	int status;
 
-	int i,is_inp_empty,b_i_index,no_args,acc_his=0;
+	int i,is_inp_empty,b_i_index,no_args;
 
 	initialize();
 
@@ -29,26 +29,18 @@ int main(){
 
 		no_args = 0;
 
-		if(!acc_his){
-			
-			//print the prompt
-			printf("basic_shell:%s$ ",pwd);
-			
-			//get command entered into memory pointed by input
-			is_inp_empty = get_input();
-		}
-		else{
-			acc_his = 0;
-		}
+		//print the prompt
+		printf("basic_shell:%s$ ",pwd);
+		
+		//get command entered into memory pointed by input
+		is_inp_empty = get_input();
+
 		if(is_inp_empty){
 			continue;
 		}
-		//printf("TEST\n");
-		acc_his = access_history(input);
+		
+		access_history(input);
 
-		if(acc_his == 1){
-			continue;
-		}
 
 		//add input into history
 		maintain_his(input);
@@ -139,18 +131,20 @@ int parse_input(void){
 
 }
 
-int access_history(char *cmd_name){
+void access_history(char *cmd_name){
 	int last_cmd_index;
 	char *temp_1,*temp_2; 
 	int val;
 	temp_1 = (char *)malloc(3*sizeof(char));
 	strcpy(temp_1,"!!");
+
+
 	if(strcmp(cmd_name,temp_1) == 0){
 		free(input);
 		input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
 		last_cmd_index = (cur_p->tail + HIS_SIZE)%(HIS_SIZE + 1);
 		strcpy(input,ar_his[last_cmd_index]);
-		return 1;
+		return;
 	}
 	else if((cmd_name[0]) == '!'){
 		val = atoi(&cmd_name[1]);
@@ -158,10 +152,10 @@ int access_history(char *cmd_name){
 		input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
 		temp_2 = his_n(val);
 		strcpy(input,temp_2);
-		return 1;
+		return;
 	}
 	else{
-		return 0;
+		return;
 	}
 }
 
