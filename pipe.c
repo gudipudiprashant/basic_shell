@@ -136,22 +136,31 @@ int redir_cmd(char *cmd, char *fname, int pipemask) {
     int fd[2];
     if (pipemask == 1) {
         fd[0] = open(fname, O_RDONLY);
-        if (fd[0] == -1)
-            printf("File or dir does not exist");
+        if (fd[0] == -1) {
+            printf("File or dir does not exist: %s\n", fname);
             return -1;
+        }
     }
     else if (pipemask == 2) {
-        fd[1] = open(fname, O_RDONLY | O_CREAT);
-        if (fd[1] == -1)
-            printf("Error opening file");
+        mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+        fd[1] = open(fname, O_WRONLY | O_CREAT | O_TRUNC, mode);
+        if (fd[1] == -1) {
+            printf("Error opening file: %s\n", fname);
             return -1;
+        }
     }
 
     int status = execute(cmd, fd, pipemask);
+    if (pipemask == 1)
+        close(fd[0]);
+    else
+        close(fd[1]);
+
     if (status > 0)
         return 0;
     else
         return 1;
+
 }
 
 int parse_inp(char *inp) {
