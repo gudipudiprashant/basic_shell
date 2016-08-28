@@ -117,14 +117,14 @@ int main(){
 
 
 			//print command
-			printf("\nCommand: ");
-			token_pos = 0;
+			// printf("\nCommand: ");
+			// token_pos = 0;
 
-			while(args[token_pos]!=NULL){
-				printf("%s ",args[token_pos]);
-				token_pos++;
-			}
-			printf("\n");
+			// while(args[token_pos]!=NULL){
+			// 	printf("%s ",args[token_pos]);
+			// 	token_pos++;
+			// }
+			// printf("\n");
 
 		}
 		
