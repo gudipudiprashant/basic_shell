@@ -6,6 +6,9 @@
 
 #define BUFFER_SIZE 100
 #define HIS_SIZE 10
+#define MAX_TOKENS 50
+#define TOKEN_DELIM " \t\r\n\a"
+
 
 // queue variables head and tail
 typedef struct
@@ -19,6 +22,9 @@ typedef struct
 int pwd_func(char **);
 int exit_func(char **);
 int history_func(char **);
+int cd_func(char **);
+
+
 void maintain_his(const char*);
 void print_his(void);
 
@@ -31,26 +37,32 @@ struct command{
 		
 };
 
-
+char *input;
 struct command **built_in_list;
 int built_in_size;
 char *pwd;
-struct command *pwd_com,*exit_com,*history_com;
+struct command *pwd_com,*exit_com,*history_com, *cd_com;
 queue_p *cur_p;
-char ** ar_his; // circular queue to maintain history
+char ** ar_his, **args; // circular queue to maintain history
 
 int main(){
 
-	char *input;
-	int i,is_built_in=0;
+	int i,is_built_in=0,token_pos = 0;
+	char *token;
 	input = (char *)malloc(sizeof(char)*BUFFER_SIZE);
 	ar_his = (char **)malloc(sizeof(char *)*(HIS_SIZE+1));
+	args = (char **)malloc(sizeof(char *)*(MAX_TOKENS));
 	cur_p = (queue_p *)malloc(sizeof(queue_p));
 	initialize();
 
 	while(1){
 
 		is_built_in = 0;
+		token_pos = 0;
+		token = NULL;
+		// how to clear args?
+
+
 		//print the prompt
 		printf("basic_shell:%s$ ",pwd);
 
@@ -64,9 +76,19 @@ int main(){
 
 		maintain_his(input);
 
+		token = strtok(input,TOKEN_DELIM); //input will get modified
+
+		while(token!=NULL){
+			args[token_pos] = token;
+			token_pos++;
+			token = strtok(NULL,TOKEN_DELIM); //strtok maintains a static pointer
+		}
+		args[token_pos] = NULL;
+
+
 		for(i = 0;i<built_in_size;i++){
 			if(strcmp(input,built_in_list[i]->name) == 0){
-				(*(built_in_list[i]->func))(NULL); // NULL for now. Will have to add args pointer in place of void after tokening input
+				(*(built_in_list[i]->func))(args); // NULL for now. Will have to add args pointer in place of void after tokening input
 				is_built_in = 1;
 			}
 		}
@@ -74,7 +96,14 @@ int main(){
 
 		if(!is_built_in){
 			printf("Command: ");
-			printf("%s\n",input);	
+			token_pos = 0;
+
+			while(args[token_pos]!=NULL){
+				printf("%s ",args[token_pos]);
+				token_pos++;
+			}
+			printf("\n");
+
 		}
 		
 	}
@@ -95,6 +124,15 @@ int exit_func(char **args){
 int history_func(char **args){
 	print_his();
 	return 0;
+}
+
+int cd_func(char **args){
+	if(args[1] != NULL){
+		chdir(args[1]);
+		
+		pwd_func(NULL);
+		return 0;
+	}
 }
 
 // returns the changed values of head and tail
@@ -183,6 +221,12 @@ void initialize(void){
 	history_com->name = "history";
 	history_com->func = &history_func;
 	built_in_list[i] = history_com;
+	i++;
+
+	cd_com = (struct command *)malloc(1*sizeof(struct command));
+	cd_com->name = "cd";
+	cd_com->func = &cd_func;
+	built_in_list[i] = cd_com;
 	i++;
 
 
