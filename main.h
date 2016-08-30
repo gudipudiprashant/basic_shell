@@ -1,3 +1,5 @@
+#include<ctype.h>
+
 #define BUFFER_SIZE 100
 #define HIS_SIZE 10
 #define MAX_TOKENS 50
