@@ -1,6 +1,6 @@
 # Basic Shell #
 
-## Contributors: ##
+## Contributors ##
 1. 140101050 Pranjal Agrawal - Piping and redirection.  
 2. 140101051 Prashant Gudipudi - Built-in function implementation
 3. 140101065 Sangana Abhiram - History implementation, Documentation
@@ -20,28 +20,37 @@
 
 ## Usage ##
 Run the shell
+
 `make run` 
 
 1. Simple commands
-`pwd`
-`history`
-`ls .`
+```shell
+bash
+pwd
+history
+ls . 
+```
 
 2. History substitutions
-`!!` //Runs ls . (last run command)
-`!n` // Runs command indexed 'n' in `history` list
+```shell
+!! #Runs ls . (last run command)
+!n # Runs command indexed 'n' in `history` list
+```
 
 3. Piping
-`ls . | grep a`
-`cat main.c | grep void | grep input`
+```shell
+ls . | grep a #Single pipe
+cat main.c | grep void | grep input # Multiple pipes
+```
 
 4. Redirection(I/O)
-`ls /bin/ > bin_list.txt` // Redirect output to file 
-`grep nano < bin_list.txt` // Redirect input from file
+```shell
+ls /bin/ > bin_list.txt # Redirect output to file 
+grep nano < bin_list.txt # Redirect input from file
+```
 
 
-
-## Overview: ##
+## Overview:\ ##
 1. Prompt:
   * Shows the current working directory of the shell
 2. In-built commands:
